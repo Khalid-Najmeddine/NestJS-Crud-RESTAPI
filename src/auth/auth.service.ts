@@ -48,25 +48,37 @@ export class AuthService {
     if (!user) {
       throw new ForbiddenException("Invalid credentials");
     };
+
     const pwMatches = await argon.verify(
       user.hash, 
       dto.password
     );
+
     if (!pwMatches) 
       throw new ForbiddenException("Invalid credentials");
     return this.signToken(user.id, user.email);
+    
   }
 
-  signToken(userId: number, email: string,): Promise<string> {
+  async signToken(userId: number, email: string,): Promise<{access_token: string}> {
+
     const payload = {
       sub: userId,
       email,
     }
-    const secret = this.config.get("JWT_SECRET");
-    return this.jwt.signAsync(payload, {
-      expiresIn: "15m",
-      secret: secret,
-    })
-  }
 
+    const secret = this.config.get("JWT_SECRET");
+    const token = await this.jwt.signAsync(
+      payload,
+      {
+        expiresIn: "15m",
+        secret: secret,
+      },
+    )
+
+    return {
+      access_token: token,
+    }
+
+  }
 }
