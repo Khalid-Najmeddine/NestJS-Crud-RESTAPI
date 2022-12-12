@@ -16,7 +16,7 @@ describe("App End2End Testing", () => {
     app.useGlobalPipes(new ValidationPipe({
       whitelist: true,
     }));
-    await app.init()
+    await app.init() 
   });
 
   afterAll(() => {
