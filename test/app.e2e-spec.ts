@@ -4,6 +4,8 @@ import * as pactum from "pactum";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { AppModule } from "../src/app.module";
 import { AuthDto } from "../src/auth/dto";
+import { inspect } from "util";
+import { EditUserDto } from "src/user/dto";
 
 describe("App End2End Testing", () => {
 
@@ -125,25 +127,45 @@ describe("App End2End Testing", () => {
   });
 
   describe("User", () => {
+
     describe("Get me", () => {
       it("should retrieve the current user", () => {
         return pactum
           .spec()
-          .post("/auth/signin")
+          .get("/users/me")
+          .withHeaders({
+            Authorization: "Bearer $S{userAccessToken}"
+          })
           .expectStatus(200)
-          .stores("userAccessToken", "access_token")
-
       })
     });
-    describe("Edit user", () => {});
+
+    describe("Edit user", () => {
+      it("should edit the user", () => {
+        const dto: EditUserDto = {
+          firstName: "KhalidIbnWalid",
+          email: "KhalidIbnWalid@gmail.com"
+        }
+        return pactum
+          .spec()
+          .patch("/users")
+          .withHeaders({
+            Authorization: "Bearer $S{userAccessToken}"
+          })
+          .withBody(dto)
+          .expectStatus(200)
+          .expectBodyContains(dto.firstName)
+          .expectBodyContains(dto.email)
+      })
+    });
   });
 
   describe("Bookmarks", () => {
     describe("Create Bookmarks", () => {});
     describe("Get Bookmarks", () => {});
     describe("Get Bookmark by id", () => {});
-    describe("Edit Bookmark", () => {});
-    describe("Delete Bookmark", () => {});
+    describe("Edit Bookmark by id", () => {});
+    describe("Delete Bookmark by id", () => {});
   });
 
 });
