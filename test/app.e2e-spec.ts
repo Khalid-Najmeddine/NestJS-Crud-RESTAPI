@@ -1,8 +1,9 @@
 import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import * as pactum from "pactum";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { AppModule } from "../src/app.module";
-
+import { AuthDto } from "../src/auth/dto";
 
 describe("App End2End Testing", () => {
 
@@ -19,9 +20,11 @@ describe("App End2End Testing", () => {
       whitelist: true,
     }));
     await app.init(); 
+    await app.listen(3004)
 
     prisma = app.get(PrismaService);
     await prisma.cleanDB();
+    pactum.request.setBaseUrl("http://localhost:3004")
   });
 
   afterAll(() => {
@@ -29,15 +32,109 @@ describe("App End2End Testing", () => {
   });
 
   describe("Authentication", () => {
+    const dto: AuthDto = {
+      email: "SigningUpFirstUser@gmail.com",
+      password: "12345"
+    }
+
     describe("Signup", () => {
-      it.todo("User Should Signup")
+
+      it("should throw an error if the email field remains empty", () => {
+        return pactum
+          .spec()
+          .post("/auth/signup")
+          .withBody({
+            email: dto.email
+          })
+          .expectStatus(400)
+          
+      })
+
+      it("should throw an error if the password field remains empty", () => {
+        return pactum
+          .spec()
+          .post("/auth/signup")
+          .withBody({
+            password: dto.password
+          })
+          .expectStatus(400)
+          
+      })
+
+      it("should throw an error if no body is provided", () => {
+        return pactum
+          .spec()
+          .post("/auth/signup")
+          .expectStatus(400)
+          
+      })
+
+      it("User Should Signup", () => {
+        return pactum
+          .spec()
+          .post("/auth/signup")
+          .withBody(dto)
+          .expectStatus(201)
+          
+      });
     });
-    describe("Signin", () => {});
-      it.todo("User Should Signin")
+
+    describe("Signin", () => {
+
+      it("should throw an error if the email field remains empty", () => {
+        return pactum
+          .spec()
+          .post("/auth/signin")
+          .withBody({
+            email: dto.email
+          })
+          .expectStatus(400)
+          
+      })
+
+      it("should throw an error if the password field remains empty", () => {
+        return pactum
+          .spec()
+          .post("/auth/signin")
+          .withBody({
+            password: dto.password
+          })
+          .expectStatus(400)
+          
+      })
+
+      it("should throw an error if no body is provided", () => {
+        return pactum
+          .spec()
+          .post("/auth/signin")
+          .expectStatus(400)
+          
+      })
+
+      it("User Should Signin", () => {
+        return pactum
+          .spec()
+          .post("/auth/signin")
+          .withBody(dto)
+          .expectStatus(200)
+          .stores("userAccessToken", "access_token")
+          
+      })
+    });
+
   });
 
   describe("User", () => {
-    describe("Get me", () => {});
+    describe("Get me", () => {
+      it("should retrieve the current user", () => {
+        return pactum
+          .spec()
+          .post("/auth/signin")
+          .expectStatus(200)
+          .stores("userAccessToken", "access_token")
+
+      })
+    });
     describe("Edit user", () => {});
   });
 
